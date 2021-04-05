@@ -1,0 +1,63 @@
+import subprocess
+
+SCALE = 1
+PHI = 0.5*(5**0.5-1) # scale factor
+LEN = 8 # how many iterations
+D = 144 # angle (in degrees) for each arc
+R = 5. # radius of largest circle
+SA = 30 # start angle
+
+# this is a bit wasteful, but I think a simple thing that works is probably better than a complicated calculation. 
+def curve(n):
+    """Plot a curve that goes in different directions depending on the binary expansion of the argument"""
+    r = R
+    b = bin(n)[2:] # chop off the 0b at the beginning
+    while len(b)<LEN:
+        b = "0" + b # make sure the binary numbers are all the same length
+
+    a = SA
+
+    direction = +1 
+    out = "\draw[color=black] (0,0) "
+    for bi in b:
+        if bi == '0':
+            out += f"arc ({a}:{a+D*dir}:{r}) " # continue in the same direction
+            a = (a+D*direction) % 360
+        else:
+            dir *= -1
+            a = (a+180) % 360 # switch direction and reduce radius
+            r *= PHI
+            out += f"arc ({a}:{a+dir*D}:{r}) "
+            a = (a+direction*D) % 360
+        r *= PHI # reduce radius
+    return out + ";"
+
+def curves():
+    """plot all of the possible curves"""
+    return "\n".join([curve(i) for i in range(2**LEN)])
+
+def full_file():
+    """Really hacky latex/tikz file."""
+    out = r"""\documentclass[12pt,a4paper,oneside,landscape]{report}
+\usepackage{tikz}
+\usepackage[margin=0.5in,paper=a4paper]{geometry}
+\begin{document}
+
+"""
+
+    for f in [curves]:
+        out += "\\begin{tikzpicture}[x=" +  f"{SCALE}cm, y={SCALE}cm]\n" + f() + "\n\\end{tikzpicture}\n\n"
+    out += r"\end{document}"
+    return out
+    
+fn = "fibo"
+tfn =   fn + ".tex"
+ofn = fn + ".pdf"
+with open(tfn,'w') as f:
+    f.write(full_file())
+
+# compile it
+
+
+subprocess.call(f"pdflatex {tfn} -o {ofn}", shell =True, executable = '/bin/zsh')
+subprocess.call(f"open {ofn}",shell =True, executable = '/bin/zsh')
