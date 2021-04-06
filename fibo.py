@@ -39,10 +39,8 @@ def curves():
     return "\n".join([curve(i) for i in range(2**LEN)])
 
 def full_file():
-    """Really hacky latex/tikz file."""
-    out = r"""\documentclass[12pt,a4paper,oneside,landscape]{report}
-\usepackage{tikz}
-\usepackage[margin=0.5in,paper=a4paper]{geometry}
+    """Use standalone class for single-image documents."""
+    out = r"""\documentclass[border=10pt,tikz]{standalone}
 \begin{document}
 
 """
@@ -62,4 +60,4 @@ with open(tfn,'w') as f:
 
 
 subprocess.call(f"{TEX} {tfn} -o {ofn}", shell =True, executable = '/bin/zsh')
-subprocess.call(f"{OPEN} {ofn}",shell =True, executable = '/bin/zsh')
+#subprocess.call(f"{OPEN} {ofn}",shell =True, executable = '/bin/zsh')
