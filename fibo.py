@@ -6,6 +6,8 @@ LEN = 8 # how many iterations
 D = 144 # angle (in degrees) for each arc
 R = 5. # radius of largest circle
 SA = 30 # start angle
+TEX = "lualatex" # Use lualatex
+OPEN = "xdg-open" # Linux 
 
 # this is a bit wasteful, but I think a simple thing that works is probably better than a complicated calculation. 
 def curve(n):
@@ -59,5 +61,5 @@ with open(tfn,'w') as f:
 # compile it
 
 
-subprocess.call(f"pdflatex {tfn} -o {ofn}", shell =True, executable = '/bin/zsh')
-subprocess.call(f"open {ofn}",shell =True, executable = '/bin/zsh')
+subprocess.call(f"{TEX} {tfn} -o {ofn}", shell =True, executable = '/bin/zsh')
+subprocess.call(f"{OPEN} {ofn}",shell =True, executable = '/bin/zsh')
