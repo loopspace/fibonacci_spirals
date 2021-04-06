@@ -1,4 +1,5 @@
 import subprocess
+import math
 
 SCALE = 1
 PHI = 0.5*(5**0.5-1) # scale factor
@@ -12,19 +13,30 @@ OPEN = "xdg-open" # Linux
 # this is a bit wasteful, but I think a simple thing that works is probably better than a complicated calculation. 
 def curve(n):
     """Plot a curve that goes in different directions depending on the binary expansion of the argument"""
-    r = R
+    r = R/PHI
     a = SA
     direction = +1 
-    out = "\draw[color=black] (0,0) "
+    out = "\draw[color=black] "
+    x = 0
+    y = 0
+    if n == 0:
+        out += "(0,0) "
     
     for i in range(LEN):
         if n%2 == 1:
             direction *= -1
             a = (a+180) % 360 # switch direction and reduce radius
             r *= PHI
-        out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
-        a = (a+direction*D) % 360
         r *= PHI # reduce radius
+        if n == 1:
+            out += f"({x},{y}) "
+        if n <= 1:
+            out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
+        else:
+            x += -r*math.cos(a * math.pi/180) + r*math.cos( (a + D*direction) * math.pi/180)
+            y += -r*math.sin(a * math.pi/180) + r*math.sin( (a + D*direction) * math.pi/180)
+            
+        a = (a+direction*D) % 360
         n >>= 1
     return out + ";"
 
