@@ -8,6 +8,8 @@ parser = argparse.ArgumentParser(description="Generate a Fibonacci spiral")
 parser.add_argument('-l','--lua',help="Use lualatex to compile document", action="store_true")
 parser.add_argument('-x','--xe',help="Use xelatex to compile document", action="store_true")
 parser.add_argument('-v','--view',help="View PDF afterwards", action="store_true")
+parser.add_argument('-t','--tikz',help="Create TikZ code", action="store_true")
+parser.add_argument('-s','--svg',help="Create SVG code", action="store_true")
 
 args = parser.parse_args()
 
@@ -36,17 +38,45 @@ else:
     OPEN = "" # Dunno what to do for Windows
     SHOW = False
 
+if args.svg:
+    R *= 10
+    TIKZ = False
+    curve_start = r'<path d="'
+    curve_end = r'" stroke="black" fill="none" />'
+    picture_start = ""
+    picture_end = ""
+    preamble = r"""<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTDSVG1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-150 -150 300 300" width="100%" height="100%">
+"""
+    postamble = r"</svg>"
+    move = lambda x,y: f"M {x:.2f} {y:.2f} "
+    arc = lambda r,a,D,d,x,y: f"A {r:.2f} {r:.2f} 0 0 {int((d+1)/2)} {x:.2f} {y:.2f} "
+else:
+    TIKZ = True
+    curve_start = r"\draw[color=black] "
+    curve_end = r";"
+    picture_start = "\\begin{tikzpicture}[x=" +  f"{SCALE}cm, y={SCALE}cm]\n"
+    picture_end = "\n\\end{tikzpicture}\n\n"
+    preamble = r"""\documentclass[border=10pt,tikz]{standalone}
+\begin{document}
+
+"""
+    postamble = r"\end{document}"
+    move = lambda x,y: f"({x},{y}) "
+    arc = lambda r,a,D,d,x,y: f"arc[radius={r}, start angle={a}, delta angle={D*d}] "
+
 # this is a bit wasteful, but I think a simple thing that works is probably better than a complicated calculation. 
 def curve(n):
     """Plot a curve that goes in different directions depending on the binary expansion of the argument"""
     r = R
     a = SA
-    direction = +1 
-    out = "\draw[color=black] "
+    direction = +1
+    out = curve_start
     x = 0
     y = 0
     if n == 0:
-        out += "(0,0) "
+        out += move(0,0)
     
     for i in range(LEN):
         if n%2 == 1:
@@ -54,17 +84,16 @@ def curve(n):
             a = (a+180) % 360 # switch direction and reduce radius
             r *= PHI
         if n == 1: # are we ready to start drawing?
-            out += f"({x},{y}) "
+            out += move(x,y)
+        # update starting point of next maybe-arc
+        x += -r*math.cos(a * math.pi/180) + r*math.cos( (a + D*direction) * math.pi/180)
+        y += -r*math.sin(a * math.pi/180) + r*math.sin( (a + D*direction) * math.pi/180)
         if n <= 1: # are we drawing?
-            out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
-        else: # update starting point of next maybe-arc
-            x += -r*math.cos(a * math.pi/180) + r*math.cos( (a + D*direction) * math.pi/180)
-            y += -r*math.sin(a * math.pi/180) + r*math.sin( (a + D*direction) * math.pi/180)
-            
+            out += arc(r,a,D,direction,x,y)
         a = (a+direction*D) % 360
         r *= PHI # reduce radius
         n >>= 1
-    return out + ";"
+    return out + curve_end
 
 def curves():
     """plot all of the possible curves"""
@@ -72,24 +101,27 @@ def curves():
 
 def full_file():
     """Use standalone class for single-image documents."""
-    out = r"""\documentclass[border=10pt,tikz]{standalone}
-\begin{document}
-
-"""
+    out = preamble
 
     for f in [curves]:
-        out += "\\begin{tikzpicture}[x=" +  f"{SCALE}cm, y={SCALE}cm]\n" + f() + "\n\\end{tikzpicture}\n\n"
-    out += r"\end{document}"
+        out += picture_start + f() + picture_end
+    out += postamble
     return out
     
 fn = "fibo"
-tfn =   fn + ".tex"
-ofn = fn + ".pdf"
+if TIKZ:
+    tfn =   fn + ".tex"
+    ofn = fn + ".pdf"
+else:
+    tfn =   fn + ".svg"
+    ofn = tfn
+    
 with open(tfn,'w') as f:
     f.write(full_file())
 
 # compile it
 
-subprocess.call(f"{TEX} {tfn} -o {ofn}", shell =True, executable = '/bin/zsh')
+if TIKZ:
+    subprocess.call(f"{TEX} {tfn} -o {ofn}", shell =True, executable = '/bin/zsh')
 if SHOW:
     subprocess.call(f"{OPEN} {ofn}",shell =True, executable = '/bin/zsh')
