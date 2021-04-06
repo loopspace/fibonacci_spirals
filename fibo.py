@@ -13,7 +13,7 @@ OPEN = "xdg-open" # Linux
 # this is a bit wasteful, but I think a simple thing that works is probably better than a complicated calculation. 
 def curve(n):
     """Plot a curve that goes in different directions depending on the binary expansion of the argument"""
-    r = R/PHI
+    r = R
     a = SA
     direction = +1 
     out = "\draw[color=black] "
@@ -27,16 +27,16 @@ def curve(n):
             direction *= -1
             a = (a+180) % 360 # switch direction and reduce radius
             r *= PHI
-        r *= PHI # reduce radius
-        if n == 1:
+        if n == 1: # are we ready to start drawing?
             out += f"({x},{y}) "
-        if n <= 1:
+        if n <= 1: # are we drawing?
             out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
-        else:
+        else: # update starting point of next maybe-arc
             x += -r*math.cos(a * math.pi/180) + r*math.cos( (a + D*direction) * math.pi/180)
             y += -r*math.sin(a * math.pi/180) + r*math.sin( (a + D*direction) * math.pi/180)
             
         a = (a+direction*D) % 360
+        r *= PHI # reduce radius
         n >>= 1
     return out + ";"
 
