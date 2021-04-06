@@ -18,15 +18,12 @@ def curve(n):
     out = "\draw[color=black] (0,0) "
     
     for i in range(LEN):
-        if n%2 == 0:
-            out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] " # continue in the same direction
-            a = (a+D*direction) % 360
-        else:
+        if n%2 == 1:
             direction *= -1
             a = (a+180) % 360 # switch direction and reduce radius
             r *= PHI
-            out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
-            a = (a+direction*D) % 360
+        out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
+        a = (a+direction*D) % 360
         r *= PHI # reduce radius
         n >>= 1
     return out + ";"
