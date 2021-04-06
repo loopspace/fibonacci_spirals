@@ -13,16 +13,12 @@ OPEN = "xdg-open" # Linux
 def curve(n):
     """Plot a curve that goes in different directions depending on the binary expansion of the argument"""
     r = R
-    b = bin(n)[2:] # chop off the 0b at the beginning
-    while len(b)<LEN:
-        b = "0" + b # make sure the binary numbers are all the same length
-
     a = SA
-
     direction = +1 
     out = "\draw[color=black] (0,0) "
-    for bi in b:
-        if bi == '0':
+    
+    for i in range(LEN):
+        if n%2 == 0:
             out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] " # continue in the same direction
             a = (a+D*direction) % 360
         else:
@@ -32,6 +28,7 @@ def curve(n):
             out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
             a = (a+direction*D) % 360
         r *= PHI # reduce radius
+        n >>= 1
     return out + ";"
 
 def curves():
