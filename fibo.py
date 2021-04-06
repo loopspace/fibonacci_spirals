@@ -21,13 +21,13 @@ def curve(n):
     out = "\draw[color=black] (0,0) "
     for bi in b:
         if bi == '0':
-            out += f"arc ({a}:{a+D*direction}:{r}) " # continue in the same direction
+            out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] " # continue in the same direction
             a = (a+D*direction) % 360
         else:
             direction *= -1
             a = (a+180) % 360 # switch direction and reduce radius
             r *= PHI
-            out += f"arc ({a}:{a+direction*D}:{r}) "
+            out += f"arc[radius={r}, start angle={a}, delta angle={D*direction}] "
             a = (a+direction*D) % 360
         r *= PHI # reduce radius
     return out + ";"
