@@ -10,6 +10,8 @@ parser.add_argument('-x','--xe',help="Use xelatex to compile document", action="
 parser.add_argument('-v','--view',help="View PDF afterwards", action="store_true")
 parser.add_argument('-t','--tikz',help="Create TikZ code", action="store_true")
 parser.add_argument('-s','--svg',help="Create SVG code", action="store_true")
+parser.add_argument('-c','--colour','--color',nargs='?', default='black', help="Set the line colour")
+parser.add_argument('-w','--linewidth','--line-width', '--strokewidth', '--stroke-width',nargs='?', default='1', help="Set the line width")
 
 args = parser.parse_args()
 
@@ -19,6 +21,18 @@ LEN = 8 # how many iterations
 D = 144 # angle (in degrees) for each arc
 R = 5. # radius of largest circle
 SA = 30 # start angle
+
+# Set line colour
+if args.colour:
+    COLOUR = args.colour
+else:
+    COLOUR = "black"
+
+# Set line width
+if args.linewidth:
+    WIDTH = args.linewidth
+else:
+    WIDTH = 1
 
 # Set TeX engine
 TEX = "pdflatex"
@@ -42,9 +56,9 @@ if args.svg:
     R *= 10
     TIKZ = False
     curve_start = r'<path d="'
-    curve_end = r'" stroke="black" fill="none" />'
-    picture_start = ""
-    picture_end = ""
+    curve_end = r'" />'
+    picture_start = f'<g stroke="{COLOUR}" fill="none" stroke-width="{WIDTH}">'
+    picture_end = r'</g>'
     preamble = r"""<?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTDSVG1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-150 -150 300 300" width="100%" height="100%">
@@ -54,9 +68,9 @@ if args.svg:
     arc = lambda r,a,D,d,x,y: f"A {r:.2f} {r:.2f} 0 0 {int((d+1)/2)} {x:.2f} {y:.2f} "
 else:
     TIKZ = True
-    curve_start = r"\draw[color=black] "
+    curve_start = r"\draw "
     curve_end = r";"
-    picture_start = "\\begin{tikzpicture}[x=" +  f"{SCALE}cm, y={SCALE}cm]\n"
+    picture_start = "\\begin{tikzpicture}" + f"[linewidth={WIDTH} pt, color={COLOUR}, x={SCALE}cm, y={SCALE}cm]\n"
     picture_end = "\n\\end{tikzpicture}\n\n"
     preamble = r"""\documentclass[border=10pt,tikz]{standalone}
 \begin{document}
